@@ -51,6 +51,33 @@ jobs:
           find MiniMail.app -type f
           du -sh MiniMail.app
 
+      - name: Smoke test (启动 5 秒看是否崩溃)
+        working-directory: platforms/macos
+        run: |
+          set -euxo pipefail
+          # 后台启动应用
+          ./MiniMail.app/Contents/MacOS/MiniMail > /tmp/MiniMail_smoke.log 2>&1 &
+          APP_PID=$!
+          echo "Started MiniMail with PID=$APP_PID"
+          # 等待 5 秒
+          sleep 5
+          # 检查进程是否还活着
+          if kill -0 $APP_PID 2>/dev/null; then
+            echo "✓ App still running after 5s"
+            kill $APP_PID || true
+            sleep 1
+            kill -9 $APP_PID 2>/dev/null || true
+          else
+            echo "✗ App crashed within 5s"
+            echo "--- Smoke test log ---"
+            cat /tmp/MiniMail_smoke.log
+            echo "--- End log ---"
+            exit 1
+          fi
+          echo "--- Smoke test log (clean shutdown) ---"
+          cat /tmp/MiniMail_smoke.log
+          echo "--- End ---"
+
       - name: Package DMG
         working-directory: platforms/macos
         run: |
@@ -74,6 +101,14 @@ jobs:
           path: platforms/macos/MiniMail-Installer.dmg
           if-no-files-found: error
           retention-days: 30
+
+      # 失败时打开 tmate 调试会话
+      - name: Setup tmate for debugging
+        if: failure()
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true
+          detached: false
 
   # ==================== Windows 构建 ====================
   build-windows:
