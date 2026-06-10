@@ -18,15 +18,46 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Show Swift version
+        working-directory: platforms/macos
+        run: |
+          swift --version
+          xcrun --show-sdk-path
+          ls -la
+
       - name: Build .app
         working-directory: platforms/macos
         run: |
-          make
-          ls -la MiniMail.app
+          set -euxo pipefail
+          # 清理
+          rm -rf MiniMail MiniMail.app MiniMail-dmg MiniMail-Installer.dmg
+          # 编译
+          swiftc -O -parse-as-library -framework Cocoa -framework WebKit -framework SwiftUI \
+            MiniMail.swift \
+            -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __info_plist -Xlinker Info.plist \
+            -o MiniMail
+          # 验证可执行文件
+          ls -la MiniMail
+          file MiniMail
+          # 打包 .app
+          mkdir -p MiniMail.app/Contents/MacOS
+          mkdir -p MiniMail.app/Contents/Resources
+          cp MiniMail MiniMail.app/Contents/MacOS/
+          cp Info.plist MiniMail.app/Contents/
+          cp AppIcon.icns MiniMail.app/Contents/Resources/
+          /usr/bin/plutil -replace CFBundleDisplayName -string "MiniMail" MiniMail.app/Contents/Info.plist
+          /usr/bin/plutil -replace CFBundleIconFile -string "AppIcon" MiniMail.app/Contents/Info.plist
+          # 验证
+          find MiniMail.app -type f
+          du -sh MiniMail.app
 
       - name: Package DMG
         working-directory: platforms/macos
-        run: make dmg
+        run: |
+          set -euxo pipefail
+          make dmg
+          ls -la MiniMail-Installer.dmg
+          du -sh MiniMail-Installer.dmg
 
       - name: Upload .app artifact
         uses: actions/upload-artifact@v4
