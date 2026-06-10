@@ -1,0 +1,20 @@
+{
+  "appName": "MiniMail",
+  "productName": "小邮箱",
+  "targetURL": "https://mail.chinamobile.com/webmail/se/mail/m.do?sid=01vLltoqtt9MTNTClrSMgJHTtOOx770M000004&from=ADDR&r=0.5574358567391762",
+  "windowTitle": "中国移动邮箱",
+  "windowWidth": 1200,
+  "windowHeight": 800,
+  "showNavigationBar": false,
+  "customUserAgent": null,
+  "unreadPollInterval": 30000,
+  "cookieMaxAgeDays": 30,
+  "dataDirName": "MiniMail",
+  "lockFileName": "MiniMail.lock",
+  "logFileName": "MiniMail_debug.log",
+  "folders": {
+    "inbox": { "id": "1", "name": "收件箱" },
+    "sent": { "id": "3", "name": "已发送" },
+    "unread": { "id": "0", "name": "未读邮件" }
+  }
+}

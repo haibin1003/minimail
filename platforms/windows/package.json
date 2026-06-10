@@ -1,0 +1,60 @@
+{
+  "name": "minimail",
+  "version": "1.0.0",
+  "description": "MiniMail - Windows version",
+  "main": "src/main/index.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "build:dir": "electron-builder --dir",
+    "dist": "npm run build"
+  },
+  "keywords": ["email", "webview", "china-mobile"],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "electron": "^42.4.0",
+    "electron-builder": "^26.15.2"
+  },
+  "build": {
+    "appId": "com.minimail.app",
+    "productName": "小邮箱",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "../../shared/config.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../../shared/config.json",
+        "to": "config.json"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "小邮箱"
+    },
+    "portable": {
+      "artifactName": "MiniMail-Portable.exe"
+    }
+  }
+}

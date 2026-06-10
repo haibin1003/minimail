@@ -1,0 +1,97 @@
+name: Build
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  # ==================== macOS 构建 ====================
+  build-macos:
+    name: Build macOS
+    runs-on: macos-15
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build .app
+        working-directory: platforms/macos
+        run: |
+          make
+          ls -la MiniMail.app
+
+      - name: Package DMG
+        working-directory: platforms/macos
+        run: make dmg
+
+      - name: Upload .app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MiniMail-macOS-app
+          path: platforms/macos/MiniMail.app
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload DMG artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MiniMail-macOS-dmg
+          path: platforms/macos/MiniMail-Installer.dmg
+          if-no-files-found: error
+          retention-days: 30
+
+  # ==================== Windows 构建 ====================
+  build-windows:
+    name: Build Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: platforms/windows/package-lock.json
+
+      - name: Install dependencies
+        working-directory: platforms/windows
+        run: npm install
+
+      - name: Build NSIS + Portable
+        working-directory: platforms/windows
+        env:
+          # 加速 Electron 下载（可选）
+          ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
+        run: npx electron-builder --win nsis portable --publish never
+
+      - name: Upload NSIS installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: MiniMail-Windows-Setup
+          path: platforms/windows/dist/小邮箱 Setup *.exe
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload portable EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: MiniMail-Windows-Portable
+          path: platforms/windows/dist/MiniMail-Portable.exe
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload unpacked
+        uses: actions/upload-artifact@v4
+        with:
+          name: MiniMail-Windows-unpacked
+          path: platforms/windows/dist/win-unpacked
+          if-no-files-found: error
+          retention-days: 30
